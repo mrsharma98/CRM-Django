@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from .models import *
+from .forms import *
 # Create your views here.
 
 
@@ -40,3 +41,47 @@ def customer(request, pk_test):
                 'order_count': order_count
                 }
     return render(request, 'accounts/customer.html', context)
+
+
+def createOrder(request):
+
+    form = OrderForm()
+
+    if request.method == 'POST':
+        # print('Printing: ', request.POST)
+        # request.POST (output) --> <QueryDict: {'csrfmiddlewaretoken': ['tAdtLaC381HmiUieRoZifiVrxhInabBjYQRFZZhGGkJCmBlFIrn9g6b1jweaMNwx'], 'customer': ['1'], 'product': ['2'], 'status': ['Delivered'], 'submit': ['Submit']}>
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+    context = {'form': form}
+    return render(request, 'accounts/order_form.html', context)
+
+def updateOrder(request, pk):
+
+    order = Order.objects.get(id=pk)
+    form = OrderForm(instance=order)
+    # instance=order --> will fill out all the details of the order which we want to update
+    # it basically means we are upating a record.
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+
+    context = {'form': form}
+    return render(request, 'accounts/order_form.html', context)
+
+
+def deleteOrder(request, pk):
+
+    order = Order.objects.get(id=pk)
+    if request.method == 'POST':
+        order.delete()
+        return redirect('/')
+
+    context = {'item': order}
+    return render(request, 'accounts/delete.html', context)
